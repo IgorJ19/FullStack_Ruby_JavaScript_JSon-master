@@ -1,26 +1,15 @@
 class UsersController < ApplicationController
-  load_and_authorize_resource
   before_action :set_user, only: [:show, :update, :destroy]
 
   # GET /users
   # GET /users.json
   def index
-    @users = if current_user.admin?
-      User.all.paginate(page: params[:page], per_page: params[:per_page])
-    else
-      User.where(email: current_user.email).paginate(page: params[:page], per_page: params[:per_page])
-             end
-
-    respond_to do |format|
-      format.json { render json: @users }
-    end
+    @users = User.paginate(page: params[:page], per_page: params[:per_page])
   end
-  
 
   # GET /users/1
   # GET /users/1.json
   def show
-    @user = User.find(params[:id])
   end
 
   # POST /users

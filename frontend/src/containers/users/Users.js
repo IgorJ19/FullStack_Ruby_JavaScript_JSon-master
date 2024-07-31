@@ -1,4 +1,4 @@
-import React, {Component, useEffect} from 'react'
+import React, {Component} from 'react'
 import {bindActionCreators} from 'redux'
 import {connect} from 'react-redux'
 import {Button, Col, Glyphicon, OverlayTrigger, Row, Tooltip} from "react-bootstrap";
@@ -24,6 +24,7 @@ export class Users extends Component {
             this.reload();
         });
     }
+
 
 
     render() {
@@ -102,6 +103,7 @@ export class Users extends Component {
             </div>
         );
     }
+
 }
 
 const mapDispatchToProps = dispatch => ({
