@@ -15,7 +15,7 @@ export var loadCertificates = (params, callback) => async (dispatch, getState) =
 export var loadUsers = () => async (dispatch, getState) => {
     try {
         var config = {
-            url: '/users',
+            url: '/users/all_users',
             headers: { authorization: getState().appState.token }
         };
         var result = await axios.request(config);

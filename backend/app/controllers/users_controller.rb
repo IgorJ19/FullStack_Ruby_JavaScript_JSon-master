@@ -19,10 +19,16 @@ class UsersController < ApplicationController
     redirect_to root_path, alert: "Nie masz uprawnień do przeglądania użytkowników."
   end
 
+  # Nowa akcja all_users
+  def all_users
+    authorize! :read, User
+    @users = User.all
+    render json: @users
+  end
+
   # GET /users/1
   # GET /users/1.json
   def show
-    @users = User.paginate(page: params[:page], per_page: params[:per_page])
   end
 
   # POST /users
