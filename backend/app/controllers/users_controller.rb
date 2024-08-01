@@ -1,20 +1,35 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :update, :destroy]
+  before_action :authenticate_user!
+
 
   # GET /users
   # GET /users.json
   def index
-    @users = User.paginate(page: params[:page], per_page: params[:per_page])
+    if current_user.admin?
+      # Admin może zobaczyć wszystkich użytkowników
+      authorize! :read, User
+      @users = User.paginate(page: params[:page], per_page: params[:per_page])
+    else
+      # Zwykli użytkownicy mogą przeglądać tylko swoje dane
+      authorize! :read, User, id: current_user.id
+      @users = [current_user] # Tylko bieżący użytkownik
+    end
+  rescue CanCan::AccessDenied
+    redirect_to root_path, alert: "Nie masz uprawnień do przeglądania użytkowników."
   end
 
   # GET /users/1
   # GET /users/1.json
   def show
+    @users = User.paginate(page: params[:page], per_page: params[:per_page])
   end
 
   # POST /users
   # POST /users.json
+
   def create
+    authorize! :read, User
     @user = User.new(user_params)
 
     if @user.save
@@ -38,6 +53,7 @@ class UsersController < ApplicationController
 
   #zmieniony controller wykorzystujący powyższą metodę która ma nadane parametry: email(pobrany przed działaniem controllera) oraz email(który chcemy wprowadzić)
   def update
+    authorize! :read, User
     current_email = @user.email
     if @user.update(user_params)
       result = update_certificates_by_email(current_email, @user.email)
