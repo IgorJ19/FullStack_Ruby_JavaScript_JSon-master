@@ -21,7 +21,7 @@ class CertificatesController < ApplicationController
   # POST /certificates
   # POST /certificates.json
   def create
-    authorize! :create, @certificate, user_name: current_user.email
+    authorize! :create, Certificate, user_name: current_user.email
     @certificate = Certificate.new(certificate_params)
 
     if @certificate.save
@@ -34,7 +34,7 @@ class CertificatesController < ApplicationController
   # PATCH/PUT /certificates/1
   # PATCH/PUT /certificates/1.json
   def update
-    authorize! :update, @certificate, Certificate, user_name: current_user.email
+    authorize! :update, Certificate, user_name: current_user.email
 
     if @certificate.update(certificate_params)
       render :show, status: :ok, location: @certificate
@@ -46,7 +46,7 @@ class CertificatesController < ApplicationController
   # DELETE /certificates/1
   # DELETE /certificates/1.json
     def destroy
-      authorize! :destroy, @certificate, user_name: current_user.email
+      authorize! :destroy, Certificate, user_name: current_user.email
       @certificate.destroy
     end
 
@@ -58,7 +58,7 @@ class CertificatesController < ApplicationController
 
   # Sprawdzanie uprawnień do odczytu dla wybranych akcji
   def authorize_read
-    authorize! :read, @certificate, Certificate, user_name: current_user.email
+    authorize! :read, Certificate, user_name: current_user.email
   end
 
   # Zaufaj tylko białej liście parametrów.

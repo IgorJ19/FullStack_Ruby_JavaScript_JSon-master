@@ -28,10 +28,6 @@ export class Users extends Component {
 
     render() {
         const { users, page, sizePerPage } = this.state;
-        const { currentUser } = this.props;
-
-        // Upewnijmy się, że currentUser jest zdefiniowany
-        const isAdmin = currentUser && currentUser.role === 'admin';
 
         return (
             <div>
@@ -43,13 +39,12 @@ export class Users extends Component {
                     </Col>
                     <Col xs={4} className="text-right">
                         <h4>
-                            {isAdmin && (
                                 <LinkContainer exact to={`/user`}>
                                     <Button bsStyle={'success'}>
                                         <Glyphicon glyph="plus" /> Add
                                     </Button>
                                 </LinkContainer>
-                            )}
+
                         </h4>
                     </Col>
                 </Row>
