@@ -1,10 +1,15 @@
 class CertificatesController < ApplicationController
+  before_action :authenticate_user!
   before_action :set_certificate, only: [:show, :update, :destroy]
 
   # GET /certificates
   # GET /certificates.json
   def index
-    @certificates = Certificate.paginate(page: params[:page], per_page: params[:per_page])
+    if current_user.admin?
+      @certificates = Certificate.paginate(page: params[:page], per_page: params[:per_page])
+    else
+      @certificates = Certificate.where(user_name: current_user.email).paginate(page: params[:page], per_page: params[:per_page])
+    end
   end
 
   # GET /certificates/1
@@ -27,6 +32,8 @@ class CertificatesController < ApplicationController
   # PATCH/PUT /certificates/1
   # PATCH/PUT /certificates/1.json
   def update
+    authorize! :update, @certificate
+
     if @certificate.update(certificate_params)
       render :show, status: :ok, location: @certificate
     else
@@ -36,21 +43,23 @@ class CertificatesController < ApplicationController
 
   # DELETE /certificates/1
   # DELETE /certificates/1.json
-  def destroy
-    @certificate.destroy
-  end
+    def destroy
+      @certificate.destroy
+    end
 
-  private
 
-  # Use callbacks to share common setup or constraints between actions.
+  # Używane do ustawiania wspólnych zmiennych lub ograniczeń dla akcji.
   def set_certificate
     @certificate = Certificate.find(params[:id])
   end
 
-  # Never trust parameters from the scary internet, only allow the white list through.
+  # Sprawdzanie uprawnień do odczytu dla wybranych akcji
+  def authorize_read
+    authorize! :read, Certificate
+  end
+
+  # Zaufaj tylko białej liście parametrów.
   def certificate_params
     params.require(:certificate).permit(:name, :description, :user_name)
   end
-
-
 end
