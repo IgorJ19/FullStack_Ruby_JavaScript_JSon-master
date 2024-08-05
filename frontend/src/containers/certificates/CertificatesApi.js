@@ -2,15 +2,23 @@ import axios from "axios";
 
 
 //api mocno połączone z controllerami, url: do jakiego adresu odnosi się operacja, method: metoda wywoływana w controllerze (czasami plus instrukcje warunkowe tak lub tak)
-export var loadCertificates = (params, callback) => async (dispatch, getState) => {
+
+export var loadCertificates = (params, callback = () => {}) => async (dispatch, getState) => {
     var config = {
         url: '/certificates',
         params,
-        headers: {authorization: getState().appState.token}
+        headers: { authorization: getState().appState.token }
     };
-    var result = await axios.request(config);
-    callback(result.data);
+
+    try {
+        var result = await axios.request(config);
+        callback(result.data);
+    } catch (error) {
+        console.error('Error loading certificates:', error);
+    }
 };
+
+
 
 export var loadUsers = () => async (dispatch, getState) => {
     try {
@@ -39,7 +47,7 @@ export var saveCertificate = (resource, callback) => async (dispatch, getState) 
 };
 
 
-export var deleteCertificate = (id, callback) => async (dispatch, getState) => {
+export var deleteCertificate = (id, callback = () => {}) => async (dispatch, getState) => {
     var config = {
         url: `/certificates/${id}`,
         method: 'DELETE',
@@ -47,6 +55,7 @@ export var deleteCertificate = (id, callback) => async (dispatch, getState) => {
     };
     var result = await axios.request(config);
     callback(result.data);
+
 };
 
 export var loadCertificate = (id, callback) => async (dispatch, getState) => {

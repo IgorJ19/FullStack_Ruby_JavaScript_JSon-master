@@ -1,125 +1,112 @@
-import React, {Component} from 'react'
-import {bindActionCreators} from 'redux'
-import {connect} from 'react-redux'
-import {Button, Col, Glyphicon, OverlayTrigger, Row, Tooltip} from "react-bootstrap";
-import {LinkContainer} from "react-router-bootstrap";
-import * as actions from "./CertificatesApi";
-import {BootstrapTable, TableHeaderColumn} from "react-bootstrap-table";
+import React, { useEffect, useState } from 'react';
+import { connect } from 'react-redux';
+import { Button, Col, Glyphicon, OverlayTrigger, Row, Tooltip } from "react-bootstrap";
+import { LinkContainer } from "react-router-bootstrap";
+import { BootstrapTable, TableHeaderColumn } from "react-bootstrap-table";
+import { loadCertificates, deleteCertificate } from './CertificatesApi';
 
-class Certificates extends Component {
-    state = {certificates: null, page: 1, sizePerPage: 10};
-
-    componentDidMount() {
-        this.reload();
-    }
-
-    reload() {
-        const {page, sizePerPage} = this.state;
-        this.props.actions.loadCertificates({page: page, per_page: sizePerPage},
-            certificates => this.setState({certificates, page, sizePerPage}));
-    }
+const Certificates = ({ loadCertificates, deleteCertificate}) => {
+    const [certificates, setCertificates] = useState(null);
+    const [page, setPage] = useState(1);
+    const [sizePerPage, setSizePerPage] = useState(10);
 
 
-    delete(id) {
-        this.props.actions.deleteCertificate(id, () => {
-            this.reload();
-        });
-    }
+
+    useEffect(() => {
+        loadCertificates({ page, per_page: sizePerPage }, setCertificates);
+    }, [loadCertificates, page, sizePerPage]);
 
 
-    render() {
-        const {certificates, page, sizePerPage} = this.state;
+    const handleDelete = (id) => {
+        deleteCertificate(id);
+        loadCertificates({ page, per_page: sizePerPage }, setCertificates);
+    };
+
+
+
         return (
-            <div>
-                <Row className="vertical-middle breadcrumbs">
-                    <Col xs={8}>
-                        <h5>
-                            <Glyphicon
-                                glyph="cog"/> Admin > Certificates
-                        </h5>
-                    </Col>
-                    <Col xs={4} className="text-right">
-                        <h4>
-                            <LinkContainer exact to={`/certificate`}>
-                                <Button bsStyle={'success'}><Glyphicon
-                                    glyph="plus"/> Add</Button>
-                            </LinkContainer>
-                        </h4>
-                    </Col>
-                </Row>
-                {certificates &&
-                    <BootstrapTable
-                        data={certificates}
-                        fetchInfo={{dataTotalSize: certificates.length}}
-                        striped
-                        hover
-                        remote
-                        pagination
-                        bordered={false}
-                        options={{
-                            onPageChange: (page, sizePerPage) => {
-                                this.reload(page, sizePerPage);
-                            },
-                            onSizePerPageList: sizePerPage => {
-                                this.reload(this.state.page, sizePerPage);
-                            },
-                            page,
-                            sizePerPage
-                        }}
-                    >
-                        <TableHeaderColumn width="0" isKey dataField='id'></TableHeaderColumn>
-                        <TableHeaderColumn width="20" dataField='name'>Name</TableHeaderColumn>
-                        <TableHeaderColumn width="20" dataField='description'>Description</TableHeaderColumn>
-                        <TableHeaderColumn width="15" dataField='user_name'>name</TableHeaderColumn>
-                        <TableHeaderColumn width="10" dataField='id' dataFormat={(cell, row) => {
-                            return <div>
+        <div>
+            <Row className="vertical-middle breadcrumbs">
+                <Col xs={8}>
+                    <h5>
+                        <Glyphicon glyph="cog" /> Admin &gt; Certificates
+                    </h5>
+                </Col>
+                <Col xs={4} className="text-right">
+                    <h4>
+                        <LinkContainer exact to={`/certificate`}>
+                            <Button bsStyle={'success'}>
+                                <Glyphicon glyph="plus" /> Add
+                            </Button>
+                        </LinkContainer>
+                    </h4>
+                </Col>
+            </Row>
+
+                <BootstrapTable
+                    data={certificates}
+                    fetchInfo={10}
+                    striped
+                    hover
+                    remote
+                    pagination
+                    bordered={false}
+                    options={{
+                        onPageChange: (newPage, newSizePerPage) => {
+                            setPage(newPage);
+                            setSizePerPage(newSizePerPage);
+                        },
+                        onSizePerPageList: (newSizePerPage) => {
+                            setSizePerPage(newSizePerPage);
+                        },
+                        page,
+                        sizePerPage
+                    }}
+                >
+                    <TableHeaderColumn width="0" isKey dataField='id'></TableHeaderColumn>
+                    <TableHeaderColumn width="20" dataField='name'>Name</TableHeaderColumn>
+                    <TableHeaderColumn width="20" dataField='description'>Description</TableHeaderColumn>
+                    <TableHeaderColumn width="15" dataField='user_name'>User Name</TableHeaderColumn>
+                    <TableHeaderColumn
+                        width="10"
+                        dataField='id'
+                        dataFormat={(cell, row) => (
+                            <div>
                                 <LinkContainer exact to={`/certificate/${row.id}`}>
-                                    <OverlayTrigger placement="top" overlay={
-                                        <Tooltip id="tooltip">
-                                            Edit
-                                        </Tooltip>
-                                    }>
-                                                    <span className="text-success pointer"> <i
-                                                        className="fas fa-edit"/></span>
+                                    <OverlayTrigger placement="top" overlay={<Tooltip id="tooltip">Edit</Tooltip>}>
+                    <span className="text-success pointer">
+                      <i className="fas fa-edit" />
+                    </span>
                                     </OverlayTrigger>
                                 </LinkContainer>
                                 <span> </span>
-
-                                <LinkContainer to={`/certificates`} onClick={() => this.delete(row.id)}>
-                                    <OverlayTrigger placement="top" overlay={
-                                        <Tooltip id="tooltip">
-                                            Delete
-                                        </Tooltip>
-                                    }>
-                                                    <span className="text-danger pointer"
-                                                          onClick={() => this.delete(row.id)}> <i
-                                                        className="fas fa-trash-alt"/></span>
-                                    </OverlayTrigger>
-                                </LinkContainer>
+                                <OverlayTrigger placement="top" overlay={<Tooltip id="tooltip">Delete</Tooltip>}>
+                  <span
+                      className="text-danger pointer"
+                      onClick={() => handleDelete(row.id)}
+                  >
+                    <i className="fas fa-trash-alt" />
+                  </span>
+                                </OverlayTrigger>
                             </div>
-                        }}>Actions
-                        </TableHeaderColumn>
+                        )}
+                    >
+                        Actions
+                    </TableHeaderColumn>
+                </BootstrapTable>
 
-                    </BootstrapTable>
-                }
-            </div>
-        );
-    }
-}
+        </div>
+    );
+};
 
-// row.id, identyfikator rzędu który jest przyjmowany jako argument metody delete(id) zaimportowanej z CertificatesApi.js,
-// użycie this. przed delete wystęouje gdyż jest to metoda zdefiniowana w naszej klasie (nk :)
-
-const mapDispatchToProps = dispatch => ({
-    actions: bindActionCreators(
-        actions,
-        dispatch)
+const mapStateToProps = (state) => ({
+    certificates: state.certificates,
 });
-//przesyłamy akcję Redux do reduktora, actions to obiekt zawierający akcje Redux, które chcemy mapować na propsy komponentu.,
 
-export default connect(
-    undefined,
-    mapDispatchToProps
-)(Certificates)
+const mapDispatchToProps = {
+    loadCertificates,
+    deleteCertificate
+};
 
-//funkcja connect z importu react-redux
+export default connect(mapStateToProps, mapDispatchToProps)(Certificates);
+

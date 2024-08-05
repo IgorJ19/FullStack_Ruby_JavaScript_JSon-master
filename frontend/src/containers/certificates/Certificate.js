@@ -1,3 +1,153 @@
+import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
+import { bindActionCreators } from 'redux';
+import { connect } from 'react-redux';
+import { Button, Col, ControlLabel, Form, FormControl, FormGroup, Glyphicon, Row } from 'react-bootstrap';
+import * as actions from './CertificatesApi';
+import { Redirect, withRouter } from "react-router";
+
+const Certificate = ({ actions, match, history }) => {
+    const [resource, setResource] = useState({
+        name: '',
+        description: '',
+        user_name: ''
+    });
+    const [validationErrors, setValidationErrors] = useState({});
+    const [previousCertificateName, setPreviousCertificateName] = useState('');
+    const [users, setUsers] = useState([]);
+    const [redirect, setRedirect] = useState(false);
+
+    // Pobieranie ID z parametrów URL
+    const { id } = match.params;
+
+    useEffect(() => {
+        actions.loadUsers()
+            .then(users => setUsers(users))
+            .catch(error => console.error('Error fetching users:', error));
+
+        if (id) {
+            actions.loadCertificate(id, resource => {
+                setResource(resource);
+                setPreviousCertificateName(resource.name);
+            });
+        }
+    }, [actions, id]);
+
+    const handleNameChange = (e) => setResource({ ...resource, name: e.target.value });
+    const handleDescriptionChange = (e) => setResource({ ...resource, description: e.target.value });
+    const handleUserNameChange = (e) => setResource({ ...resource, user_name: e.target.value });
+
+    const saveCertificate = (e) => {
+        e.preventDefault();
+        const errors = {};
+        if (!resource.name) errors.name = "Name can't be null";
+        if (!resource.description) errors.description = "Description can't be null";
+        if (!resource.user_name) errors.user_name = "You need to choose the user email";
+
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+        } else {
+            actions.saveCertificate(resource, () => setRedirect(true));
+        }
+    };
+
+    if (redirect) {
+        return <Redirect to="/certificates" />;
+    }
+
+    const getValidationState = (field) => (validationErrors[field] ? 'error' : null);
+
+    return (
+        <div>
+            <Row className="vertical-middle breadcrumbs">
+                <Col xs={8}>
+                    <h5>
+                        <Glyphicon glyph="cog" /> Admin > Users > Certificates {resource.id ?
+                        <span><b>{previousCertificateName}</b> - edit</span> :
+                        <span>New</span>}
+                    </h5>
+                </Col>
+            </Row>
+            <Row id='form'>
+                <Col xs={12} md={6}>
+                    <Form horizontal onSubmit={saveCertificate}>
+                        <FormGroup controlId="name" validationState={getValidationState('name')}>
+                            <Col componentClass={ControlLabel} sm={2}>Name</Col>
+                            <Col sm={10}>
+                                <FormControl
+                                    className="form-control"
+                                    style={{ width: '400px' }}
+                                    value={resource.name}
+                                    placeholder="Enter text"
+                                    onChange={handleNameChange}
+                                />
+                                {validationErrors.name && (
+                                    <ControlLabel>{validationErrors.name}</ControlLabel>
+                                )}
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="description" validationState={getValidationState('description')}>
+                            <Col componentClass={ControlLabel} sm={2}>Description</Col>
+                            <Col sm={10}>
+                                <textarea
+                                    className="form-control"
+                                    style={{ maxHeight: '200px', maxWidth: '400px', minHeight: '100px', minWidth: '200px', resize: 'true' }}
+                                    value={resource.description}
+                                    placeholder="Enter text"
+                                    onChange={handleDescriptionChange}
+                                />
+                                {validationErrors.description && (
+                                    <ControlLabel>{validationErrors.description}</ControlLabel>
+                                )}
+                            </Col>
+                        </FormGroup>
+                        <FormGroup controlId="user_name" validationState={getValidationState('user_name')}>
+                            <Col componentClass={ControlLabel} sm={2}>Select User</Col>
+                            <Col sm={10}>
+                                <FormControl componentClass="select"
+                                             placeholder="select"
+                                             value={resource.user_name}
+                                             onChange={handleUserNameChange}>
+                                    <option value="">Select User</option>
+                                    {users.map(user => (
+                                        <option key={user.id} value={user.email}>{user.email}</option>
+                                    ))}
+                                </FormControl>
+                                {validationErrors.user_name && (
+                                    <ControlLabel>{validationErrors.user_name}</ControlLabel>
+                                )}
+                            </Col>
+                        </FormGroup>
+                        <Col xsOffset={2} xs={10} className='form-buttons margin10'>
+                            <Button type="submit" bsStyle={'success'}>Save</Button>
+                            <Button bsStyle={'warning'} onClick={() => history.push('/certificates')}>
+                                Cancel
+                            </Button>
+                        </Col>
+                    </Form>
+                </Col>
+            </Row>
+        </div>
+    );
+};
+
+Certificate.propTypes = {
+    actions: PropTypes.object.isRequired,
+    match: PropTypes.object.isRequired,
+    history: PropTypes.object.isRequired,
+};
+
+const mapDispatchToProps = dispatch => ({
+    actions: bindActionCreators(actions, dispatch)
+});
+
+export default withRouter(connect(null, mapDispatchToProps)(Certificate));
+
+
+
+
+/*
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
@@ -163,3 +313,5 @@ const mapDispatchToProps = dispatch => ({
 });
 
 export default connect(null, mapDispatchToProps)(Certificate);
+
+*/
