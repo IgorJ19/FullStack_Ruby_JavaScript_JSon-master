@@ -6,13 +6,15 @@ import { withRouter } from 'react-router';
 import * as actions from "./UsersApi";
 import {LinkContainer} from "react-router-bootstrap";
 
-const User = ({ match, history, loadUser, saveUser }) => {
+const User = ({ match, history, loadUser, loadUsers, saveUser }) => {
     const [resource, setResource] = useState(null);
     const [validationErrors, setValidationErrors] = useState({});
     const [previousUserName, setPreviousUserName] = useState('');
     const [passwordConfirm, setPasswordConfirm] = useState('');
+    const [showAccessMessage, setShowAccessMessage] = useState(false);
 
     useEffect(() => {
+
         const id = match.params.id;
         if (id) {
             loadUser(id, (data) => {
@@ -20,9 +22,20 @@ const User = ({ match, history, loadUser, saveUser }) => {
                 setPreviousUserName(data.email);
             });
         } else {
-            setResource({});
+            if(actions.logInFlag) {
+                setResource({});
+            }
+            else setResource(null);
         }
-    }, [match.params.id, loadUser]);
+
+        const timer = setTimeout(() => {
+            setShowAccessMessage(true);
+        }, 300);
+
+        return () => clearTimeout(timer); // Czyszczenie timera przy odmontowaniu
+
+    }, [match.params.id]);
+
 
     const handleNameChange = (e) => {
         setResource({ ...resource, email: e.target.value });
@@ -64,7 +77,7 @@ const User = ({ match, history, loadUser, saveUser }) => {
 
     return (
         <div>
-            {!resource && (
+            {!resource && showAccessMessage && (
                 <div style={{textAlign: 'center', padding: '50px 20px'}}>
                     <Glyphicon glyph="alert" style={{fontSize: '40px', color: '#d9534f'}}/>
                     <h3 style={{marginTop: '20px'}}>Restricted Access</h3>

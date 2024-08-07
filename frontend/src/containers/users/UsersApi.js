@@ -1,6 +1,6 @@
 import axios from "axios";
 
-
+export let logInFlag;
 export var loadUsers = (params, callback) => async (dispatch, getState) => {
     var config = {
         url: '/users',
@@ -11,10 +11,14 @@ export var loadUsers = (params, callback) => async (dispatch, getState) => {
     try {
         var result = await axios.request(config);
         callback(result.data);
+        logInFlag = 1;
     } catch (error) {
         console.error('Error loading users:', error);
     }
 };
+
+
+
 
 export var loadUser = (id, callback) => async (dispatch, getState) => {
     var config = {

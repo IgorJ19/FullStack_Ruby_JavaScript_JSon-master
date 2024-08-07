@@ -6,6 +6,7 @@ import { LinkContainer } from "react-router-bootstrap";
 import * as actions from "./UsersApi";
 import { BootstrapTable, TableHeaderColumn } from "react-bootstrap-table";
 
+
 const Users = ({ actions }) => {
     const [users, setUsers] = useState(null);
     const [page, setPage] = useState(1);
@@ -94,9 +95,9 @@ const Users = ({ actions }) => {
                             <div>
                                 <LinkContainer exact to={`/user/${row.id}`}>
                                     <OverlayTrigger placement="top" overlay={<Tooltip id="tooltip">Edit</Tooltip>}>
-                    <span className="text-success pointer">
-                      <i className="fas fa-edit" />
-                    </span>
+                            <span className="text-success pointer">
+                              <i className="fas fa-edit" />
+                            </span>
                                     </OverlayTrigger>
                                 </LinkContainer>
                                 <span> </span>
