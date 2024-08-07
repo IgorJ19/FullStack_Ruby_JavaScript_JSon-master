@@ -28,7 +28,7 @@ const AppTemplate = ({ authenticated, loading, children, actions }) => {
                         <NavDropdown id="admin" eventKey={1}
                                      title={
                                          <span>
-                                    <Glyphicon glyph="cog" /> Admin
+                                    <Glyphicon glyph="cog" /> Page
                                 </span>}
                         >
                             <LinkContainer exact to="/">

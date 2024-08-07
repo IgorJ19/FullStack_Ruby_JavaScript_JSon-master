@@ -9,11 +9,18 @@ const Certificates = ({ loadCertificates, deleteCertificate}) => {
     const [certificates, setCertificates] = useState(null);
     const [page, setPage] = useState(1);
     const [sizePerPage, setSizePerPage] = useState(10);
+    const [showAccessMessage, setShowAccessMessage] = useState(false);
 
 
 
     useEffect(() => {
         loadCertificates({ page, per_page: sizePerPage }, setCertificates);
+
+        const timer = setTimeout(() => {
+            setShowAccessMessage(true);
+        }, 300);
+
+        return () => clearTimeout(timer); // Czyszczenie timera przy odmontowaniu
     }, [loadCertificates, page, sizePerPage]);
 
 
@@ -26,10 +33,24 @@ const Certificates = ({ loadCertificates, deleteCertificate}) => {
 
         return (
         <div>
+            {!certificates && showAccessMessage && (
+                <div style={{textAlign: 'center', padding: '50px 20px'}}>
+                    <Glyphicon glyph="alert" style={{fontSize: '40px', color: '#d9534f'}}/>
+                    <h3 style={{marginTop: '20px'}}>Restricted Access</h3>
+                    <p style={{fontSize: '18px', color: '#777'}}>
+                        The information on this page is available only to logged-in users. Please log in to access the
+                        data.
+                    </p>
+                    <LinkContainer exact to="/login">
+                        <Button bsStyle={'primary'}>Go to Login</Button>
+                    </LinkContainer>
+                </div>
+            )}
+            {certificates &&  (
             <Row className="vertical-middle breadcrumbs">
                 <Col xs={8}>
                     <h5>
-                        <Glyphicon glyph="cog" /> Admin &gt; Certificates
+                        <Glyphicon glyph="cog" /> Page > Certificates
                     </h5>
                 </Col>
                 <Col xs={4} className="text-right">
@@ -42,10 +63,11 @@ const Certificates = ({ loadCertificates, deleteCertificate}) => {
                     </h4>
                 </Col>
             </Row>
-
+            )}
+            {certificates && (
                 <BootstrapTable
                     data={certificates}
-                    fetchInfo={10}
+                    fetchInfo={{ dataTotalSize: certificates.length }}
                     striped
                     hover
                     remote
@@ -94,6 +116,7 @@ const Certificates = ({ loadCertificates, deleteCertificate}) => {
                         Actions
                     </TableHeaderColumn>
                 </BootstrapTable>
+            )}
 
         </div>
     );

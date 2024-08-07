@@ -5,38 +5,59 @@ import { connect } from 'react-redux';
 import { Button, Col, ControlLabel, Form, FormControl, FormGroup, Glyphicon, Row } from 'react-bootstrap';
 import * as actions from './CertificatesApi';
 import { Redirect, withRouter } from "react-router";
+import {LinkContainer} from "react-router-bootstrap";
 
+//komponent funkcyjny zastępujący klasę
 const Certificate = ({ actions, match, history }) => {
+
+    //służy do zmiany wartości poniżej opisanych elementów useState: Jest to hook, który deklaruje stan w komponencie funkcyjnym, coś jak konstruktor
     const [resource, setResource] = useState({
         name: '',
         description: '',
         user_name: ''
     });
+
+    //obiek który przechowuje błędy walidacji oraz metoda do edcji błędów
     const [validationErrors, setValidationErrors] = useState({});
+    //podobnie jak powyżej, używamy do edycji nazw
     const [previousCertificateName, setPreviousCertificateName] = useState('');
-    const [users, setUsers] = useState([]);
+    //tablica użytkowników i metoda do edycji
+    const [users, setUsers] = useState(null);
+    //boolean, odpowiedź na pytanie czy należy przenieśc na innąą stronę
     const [redirect, setRedirect] = useState(false);
+    const [showAccessMessage, setShowAccessMessage] = useState(false);
 
     // Pobieranie ID z parametrów URL
     const { id } = match.params;
 
+    //ładowanie listy certyfikatów i obsługa
     useEffect(() => {
         actions.loadUsers()
             .then(users => setUsers(users))
             .catch(error => console.error('Error fetching users:', error));
 
+    //jeśli dane id istnieje wykonujemy polecenie załadowania certyfikatu o konkretnym id
         if (id) {
             actions.loadCertificate(id, resource => {
                 setResource(resource);
+                //ustawiamy nazwe dla obecnego (a w przyszłości poprzedniego) certyfikatu
                 setPreviousCertificateName(resource.name);
             });
         }
+
+        const timer = setTimeout(() => {
+            setShowAccessMessage(true);
+        }, 300);
+
+        return () => clearTimeout(timer); // Czyszczenie timera przy odmontowaniu
     }, [actions, id]);
 
+    //wszystkie wykonjują się wraz ze zmianą wartości w polach formularza
     const handleNameChange = (e) => setResource({ ...resource, name: e.target.value });
-    const handleDescriptionChange = (e) => setResource({ ...resource, description: e.target.value });
+    const handleDescriptionChange = (e) => setResource({ ...resource, description: e.target.value } , console.log(resource.description));
     const handleUserNameChange = (e) => setResource({ ...resource, user_name: e.target.value });
 
+    // zapis z danymi wprowadzonymi do formularza oraz walidacja danych
     const saveCertificate = (e) => {
         e.preventDefault();
         const errors = {};
@@ -59,17 +80,36 @@ const Certificate = ({ actions, match, history }) => {
 
     return (
         <div>
+            {!users && showAccessMessage &&  (
+                <div style={{textAlign: 'center', padding: '50px 20px'}}>
+                    <Glyphicon glyph="alert" style={{fontSize: '40px', color: '#d9534f'}}/>
+                    <h3 style={{marginTop: '20px'}}>Restricted Access</h3>
+                    <p style={{fontSize: '18px', color: '#777'}}>
+                        The information on this page is available only to logged-in users. Please log in to access the
+                        data.
+                    </p>
+                    <LinkContainer exact to="/login">
+                        <Button bsStyle={'primary'}>Go to Login</Button>
+                    </LinkContainer>
+                </div>
+            )}
+            {users && (
             <Row className="vertical-middle breadcrumbs">
                 <Col xs={8}>
                     <h5>
-                        <Glyphicon glyph="cog" /> Admin > Users > Certificates {resource.id ?
+                        <Glyphicon glyph="cog" /> Page > Certificates {resource.id ?
                         <span><b>{previousCertificateName}</b> - edit</span> :
                         <span>New</span>}
                     </h5>
                 </Col>
             </Row>
+            )}
+
+            {users && (
+
             <Row id='form'>
                 <Col xs={12} md={6}>
+                    {/*wskazanie do metody zapisu */}
                     <Form horizontal onSubmit={saveCertificate}>
                         <FormGroup controlId="name" validationState={getValidationState('name')}>
                             <Col componentClass={ControlLabel} sm={2}>Name</Col>
@@ -90,6 +130,7 @@ const Certificate = ({ actions, match, history }) => {
                             <Col componentClass={ControlLabel} sm={2}>Description</Col>
                             <Col sm={10}>
                                 <textarea
+                                    // opis wyglądu kontrolki oraz wartość jaką docelowo będzie zawierać i metoda wykonywana przy zmianie wartości w niej
                                     className="form-control"
                                     style={{ maxHeight: '200px', maxWidth: '400px', minHeight: '100px', minWidth: '200px', resize: 'true' }}
                                     value={resource.description}
@@ -109,6 +150,9 @@ const Certificate = ({ actions, match, history }) => {
                                              value={resource.user_name}
                                              onChange={handleUserNameChange}>
                                     <option value="">Select User</option>
+                                    {/*pobieranie userów do slecta
+                                        kluczem jest id, każda opcja więc jest po nim rozróżniana
+                                         danemu certyfikatowi przypiszemy wybrany przez nas email z listy pobranych email*/}
                                     {users.map(user => (
                                         <option key={user.id} value={user.email}>{user.email}</option>
                                     ))}
@@ -127,6 +171,7 @@ const Certificate = ({ actions, match, history }) => {
                     </Form>
                 </Col>
             </Row>
+            )}
         </div>
     );
 };
@@ -142,176 +187,3 @@ const mapDispatchToProps = dispatch => ({
 });
 
 export default withRouter(connect(null, mapDispatchToProps)(Certificate));
-
-
-
-
-/*
-
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-import { Button, Col, ControlLabel, Form, FormControl, FormGroup, Glyphicon, Row } from 'react-bootstrap';
-import * as actions from './CertificatesApi';
-
-class Certificate extends Component {
-    state = {
-        resource: {
-            name: '', // Inicjalizacja wartości
-            description: '',
-            user_name: ''
-        },
-        validationErrors: {},
-        previousCertificateName: '',
-        users: []
-    };
-
-    handleNameChange = (e) => {
-        const { resource } = this.state;
-        this.setState({ resource: { ...resource, name: e.target.value } });
-    };
-
-    handleDescriptionChange = (e) => {
-        const { resource } = this.state;
-        this.setState({ resource: { ...resource, description: e.target.value } });
-    };
-
-    handleUserNameChange = (e) => {
-        const { resource } = this.state;
-        this.setState({ resource: { ...resource, user_name: e.target.value } });
-    };
-
-    saveCertificate = (e) => {
-        e.preventDefault();
-        const { resource } = this.state;
-        const validationErrors = {};
-        if (Object.keys(resource).length > 0) {
-            if (!resource.name || resource.name.length < 1)
-                validationErrors.name = "Name can't be null";
-            if (!resource.description || resource.description.length < 1)
-                validationErrors.description = "Description can't be null";
-            if (!resource.user_name)
-                validationErrors.user_name = "You need to choose the user email";
-        }
-        if (Object.keys(validationErrors).length > 0) {
-            this.setState({ validationErrors });
-        } else {
-            this.props.actions.saveCertificate(resource, () => {
-                this.context.router.history.push('/certificates');
-            });
-        }
-    };
-
-    componentDidMount() {
-        this.props.actions.loadUsers()
-            .then(users => this.setState({ users }))
-            .catch(error => console.error('Error fetching users:', error));
-
-        const id = this.props.match.params.id;
-        if (id) {
-            this.loadCertificate(id);
-        }
-    }
-
-    loadCertificate(id) {
-        this.props.actions.loadCertificate(id, resource =>
-            this.setState({ resource: resource, previousCertificateName: resource.name })
-        );
-    }
-
-    getValidationState(id) {
-        const { validationErrors } = this.state;
-        if (validationErrors[id]) {
-            return 'error';
-        }
-        return null;
-    }
-
-    render() {
-        const { resource, validationErrors, previousCertificateName, users } = this.state;
-        return (
-            <div>
-                {resource && <Row className="vertical-middle breadcrumbs">
-                    <Col xs={8}>
-                        <h5>
-                            <Glyphicon glyph="cog"/> Admin > Users > Certificates {resource.id ?
-                            <span><b>{previousCertificateName}</b> - edit</span> :
-                            <span>New</span>}
-                        </h5>
-                    </Col>
-                </Row>}
-                {resource &&
-                    <Row id='form'>
-                        <Col xs={12} md={6}>
-                            <Form horizontal onSubmit={this.saveCertificate}>
-                                <FormGroup controlId="name" validationState={this.getValidationState('name')}>
-                                    <Col componentClass={ControlLabel} sm={2}>Name</Col>
-                                    <Col sm={10}>
-                                        <FormControl
-                                            className="form-control"
-                                            style={{ width: '400px'}}
-                                            value={resource.name || ''}
-                                            placeholder="Enter text"
-                                            onChange={this.handleNameChange}
-                                        />
-                                        {validationErrors.name &&
-                                            <ControlLabel>{validationErrors.name}</ControlLabel>}
-                                    </Col>
-                                </FormGroup>
-                                <FormGroup controlId="description" validationState={this.getValidationState('description')}>
-                                    <Col componentClass={ControlLabel} sm={2}>Description</Col>
-                                    <Col sm={10}>
-                                        <textarea
-                                            className="form-control"
-                                            style={{ maxHeight: '200px', maxWidth: '400px', minHeight: '100px', minWidth: '200px', resize: 'true' }}
-                                            value={resource.description || ''}
-                                            placeholder="Enter text"
-                                            onChange={this.handleDescriptionChange}
-                                        />
-                                        {validationErrors.description &&
-                                            <ControlLabel>{validationErrors.description}</ControlLabel>}
-                                    </Col>
-                                </FormGroup>
-                                <FormGroup controlId="user_name" validationState={this.getValidationState('user_name')}>
-                                    <Col componentClass={ControlLabel} sm={2}>Select User</Col>
-                                    <Col sm={10}>
-                                        <FormControl componentClass="select"
-                                                     placeholder="select"
-                                                     value={resource.user_name || ''}
-                                                     onChange={this.handleUserNameChange}>
-                                            <option value="">Select User</option>
-                                            {users.map(user => (
-                                                <option key={user.id} value={user.email}>{user.email}</option>
-                                            ))}
-                                        </FormControl>
-                                        {validationErrors.user_name &&
-                                            <ControlLabel>{validationErrors.user_name}</ControlLabel>}
-                                    </Col>
-                                </FormGroup>
-                                <Col xsOffset={2} xs={10} className='form-buttons margin10'>
-                                    <Button type="submit" bsStyle={'success'}>Save</Button>
-                                    <Button bsStyle={'warning'} onClick={() => this.context.router.history.push(`/certificates`)}>
-                                        Cancel
-                                    </Button>
-                                </Col>
-                            </Form>
-                        </Col>
-                    </Row>
-                }
-            </div>
-        );
-    }
-}
-
-Certificate.contextTypes = {
-    router: PropTypes.object
-};
-
-const mapDispatchToProps = dispatch => ({
-    actions: bindActionCreators(actions, dispatch)
-});
-
-export default connect(null, mapDispatchToProps)(Certificate);
-
-*/
