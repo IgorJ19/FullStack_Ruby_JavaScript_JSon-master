@@ -29,9 +29,8 @@ const Users = ({ actions }) => {
     };
 
     const deleteUser = (id) => {
-        actions.deleteUser(id, () => {
+        actions.deleteUser(id)
         reload();
-        });
     };
 
     return (

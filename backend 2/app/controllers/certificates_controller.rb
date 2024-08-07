@@ -6,11 +6,11 @@ class CertificatesController < ApplicationController
   # GET /certificates.json
   def index
     authorize! :read, Certificate, user_name: current_user.email
-    if current_user.admin?
-      @certificates = Certificate.paginate(page: params[:page], per_page: params[:per_page])
-    else
-      @certificates = Certificate.where(user_name: current_user.email).paginate(page: params[:page], per_page: params[:per_page])
-    end
+    @certificates = if current_user.admin?
+                      Certificate.paginate(page: params[:page], per_page: params[:per_page])
+                    else
+                      Certificate.where(user_name: current_user.email).paginate(page: params[:page], per_page: params[:per_page])
+                    end
   end
 
   # GET /certificates/1
@@ -45,23 +45,20 @@ class CertificatesController < ApplicationController
 
   # DELETE /certificates/1
   # DELETE /certificates/1.json
-    def destroy
-      authorize! :destroy, Certificate, user_name: current_user.email
-      @certificate.destroy
-    end
+  def destroy
+    authorize! :destroy, Certificate, user_name: current_user.email
+    @certificate.destroy
+    head :no_content
+  end
 
+  private
 
-  # Używane do ustawiania wspólnych zmiennych lub ograniczeń dla akcji.
   def set_certificate
     @certificate = Certificate.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Certificate not found' }, status: :not_found
   end
 
-  # Sprawdzanie uprawnień do odczytu dla wybranych akcji
-  def authorize_read
-    authorize! :read, Certificate, user_name: current_user.email
-  end
-
-  # Zaufaj tylko białej liście parametrów.
   def certificate_params
     params.require(:certificate).permit(:name, :description, :user_name)
   end

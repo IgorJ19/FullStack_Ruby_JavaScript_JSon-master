@@ -20,6 +20,7 @@
 #
 
 class User < ApplicationRecord
+
   include Devise::JWT::RevocationStrategies::JTIMatcher
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
@@ -30,4 +31,7 @@ class User < ApplicationRecord
   def roles
     []
   end
+
+  has_many :certificates, foreign_key: 'user_name', primary_key: 'email', dependent: :destroy
+
 end

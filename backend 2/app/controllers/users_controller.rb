@@ -20,22 +20,21 @@ class UsersController < ApplicationController
 
   # Nowa akcja all_users
   def all_users
-    authorize! :read, User, id: current_user.id
+    authorize! :read, User
     @users = User.all
     render json: @users
   end
 
   # GET /users/1
   # GET /users/1.json
-  def show; end
+  def show
+  end
 
   # POST /users
   # POST /users.json
-
   def create
-    authorize! :create, User # Sprawdzenie autoryzacji
-
-    return unless current_user.admin? #tylko admini mogą tworzyć
+    authorize! :create, User
+    return unless current_user.admin?
 
     @user = User.new(user_params)
 
@@ -48,17 +47,6 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/1
   # PATCH/PUT /users/1.json
-  # metoda o dwóch parametrach wykonująca zawołanie SQL: UPDATE "certificates" SET "user_name" = 'ludek@op.pl' WHERE "certificates"."user_name" = ?  [["user_name", "przykład"]]
-  def update_certificates_by_email(user_email, new_user_name)
-    certificates = Certificate.where(user_name: user_email)
-    if certificates.update_all(user_name: new_user_name)
-      { message: 'Certificates updated successfully' }
-    else
-      { error: 'Failed to update certificates' }
-    end
-  end
-
-  # zmieniony controller wykorzystujący powyższą metodę która ma nadane parametry: email(pobrany przed działaniem controllera) oraz email(który chcemy wprowadzić)
   def update
     authorize! :update, User, id: current_user.id
     current_email = @user.email
@@ -77,29 +65,42 @@ class UsersController < ApplicationController
   # DELETE /users/1
   # DELETE /users/1.json
   def destroy
-    # Autoryzacja przed próbą usunięcia użytkownika
     authorize! :destroy, @user
-
-    @user = User.find(params[:id])
 
     if @user.admin?
       flash[:alert] = "Nie możesz usunąć konta administratora."
+      redirect_to users_path
     else
+      # Usunięcie certyfikatów powiązanych z użytkownikiem
+      @user.certificates.destroy_all
+
+      # Usunięcie użytkownika
       @user.destroy
+
+      flash[:notice] = "Użytkownik został usunięty."
+      redirect_to users_path
     end
   end
 
   private
 
-  # Użyj wywołań zwrotnych, aby udostępnić wspólne ustawienia lub ograniczenia między akcjami.
   def set_user
-    authorize! :read, User, id: current_user.id
     @user = User.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'User not found' }, status: :not_found
   end
 
-  # przepuszczaj jedynie białą listę.
   def user_params
-    authorize! :read, User, id: current_user.id
     params.require(:user).permit(:email, :password)
   end
+
+  def update_certificates_by_email(user_email, new_user_name)
+    certificates = Certificate.where(user_name: user_email)
+    if certificates.update_all(user_name: new_user_name)
+      { message: 'Certificates updated successfully' }
+    else
+      { error: 'Failed to update certificates' }
+    end
+  end
 end
+
