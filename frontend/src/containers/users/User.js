@@ -8,9 +8,9 @@ import {LinkContainer} from "react-router-bootstrap";
 
 const User = ({ match, history, loadUser, loadUsers, saveUser }) => {
     const [resource, setResource] = useState(null);
+    const [passwordConfirm, setPasswordConfirm] = useState('');
     const [validationErrors, setValidationErrors] = useState({});
     const [previousUserName, setPreviousUserName] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
     const [showAccessMessage, setShowAccessMessage] = useState(false);
 
     useEffect(() => {
