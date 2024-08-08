@@ -1,0 +1,11 @@
+- dodany CanCan wraz z autoryzacją administratorów i zwykłych użytkowników
+- zmiana javascriptu z klasowych na funkcyjne
+- usunięcie użytkownika powoduje usunięcie jego certyfikatów
+- edycja użytkownika wpływa na edycję widoku w selekcie dla tworzenia i edycji certyfikatu
+- +Add w users ma utworzoną flagę w api w metodzie wcztującej użytkowników dla rozróżnienia czy brakuje użytkowników czy nie została dokonana autoryzcja
+- poprawa błędów w widoku
+- dodanie ekranu informującego o potrzebie zaloowania w przypadku bycia wylogowanym i próby osiągnięcia plików wymagających autoryzacji wraz z opóźnieniem dla
+- tego ekranu w celu zapobiegania wyświetlania się go w trakcie ładowania strony
+- trzem użytkownikom nadałem administratora i zakazałem w backendzie usuwania administratorów w celu zapobiegnięcia usunięcia wszystkich użytkowników
+- zainstalowałem wymagane pakiety
+
